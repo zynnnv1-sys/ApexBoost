@@ -51,4 +51,3 @@ jobs:
       with:
         name: ApexBoost-GameBooster
         path: "**/build/outputs/apk/debug/*.apk"
-
