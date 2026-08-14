@@ -1,1 +1,54 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Unzip & Move Files
+      run: |
+        if ls *.zip 1> /dev/null 2>&1; then
+          unzip -o *.zip
+          # Pindahkan file dari subfolder ke root jika ada
+          find . -maxdepth 2 -name "build.gradle.kts" -o -name "build.gradle" | while read file; do
+            dir=$(dirname "$file")
+            if [ "$dir" != "." ] && [ "$dir" != "./app" ]; then
+              cp -r "$dir"/* . 2>/dev/null || true
+            fi
+          done
+        fi
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+
+    - name: Make Gradlew Executable
+      run: chmod +x gradlew || true
+
+    - name: Build APK
+      run: |
+        if [ -f "./gradlew" ]; then
+          ./gradlew assembleDebug --stacktrace
+        else
+          gradle assembleDebug --stacktrace
+        fi
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ApexBoost-GameBooster
+        path: "**/build/outputs/apk/debug/*.apk"
 
